@@ -52,17 +52,10 @@ if (getenv('CACHE_AVAILABILITY_DOMAINS')) {
 if (getenv('TOO_MANY_REQUESTS_TIME_WAIT')) {
     $api->setWaiter(new TooManyRequestsWaiter((int) getenv('TOO_MANY_REQUESTS_TIME_WAIT')));
 }
-$notifier = (function (): \Hitrov\Interfaces\NotifierInterface {
-    /*
-     * if you have own https://core.telegram.org/bots
-     * and set TELEGRAM_BOT_API_KEY and your TELEGRAM_USER_ID in .env
-     *
-     * then you can get notified when script will succeed.
-     * otherwise - don't mind OR develop you own NotifierInterface
-     * to e.g. send SMS or email.
-     */
-    return new \Hitrov\Notification\Telegram();
-})();
+$notifiers = [
+    new \Hitrov\Notification\Telegram(),
+    new \Hitrov\Notification\Discord(),
+];
 
 $shape = getenv('OCI_SHAPE');
 
@@ -115,11 +108,14 @@ foreach ($availabilityDomains as $availabilityDomainEntity) {
     }
 
     // success
-    $message = json_encode($instanceDetails, JSON_PRETTY_PRINT);
-    echo "$message\n";
+// success
+$message = json_encode($instanceDetails, JSON_PRETTY_PRINT);
+echo "$message\n";
+foreach ($notifiers as $notifier) {
     if ($notifier->isSupported()) {
         $notifier->notify($message);
     }
+}
 
     return;
 }
