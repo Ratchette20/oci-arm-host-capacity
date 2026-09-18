@@ -41,7 +41,11 @@ jobs:
         run: |
           composer update --prefer-dist --no-progress
 
-      - name: Create Private Key File and Execute Script
+      - name: Debug secrets presence
+        env:
+          OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
+        run: |
+          echo "Longueur OCI_TENANCY_ID: $(echo -n "$OCI_TENANCY_ID" | wc -c)"
         env:
           OCI_REGION: ${{ secrets.OCI_REGION }}
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
