@@ -46,7 +46,8 @@ jobs:
           OCI_TENANCY_ID: ${{ secrets.OCI_TENANCY_ID }}
         run: |
           echo "Longueur OCI_TENANCY_ID: $(echo -n "$OCI_TENANCY_ID" | wc -c)"
-        - name: Create Private Key File and Execute Script
+
+      - name: Create Private Key File and Execute Script
         env:
           OCI_REGION: ${{ secrets.OCI_REGION }}
           OCI_USER_ID: ${{ secrets.OCI_USER_ID }}
