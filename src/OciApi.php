@@ -97,6 +97,9 @@ class OciApi
 
         $baseUrl = "{$this->getBaseApiUrl($config)}/instances/";
 
+        echo "DEBUG baseUrl: $baseUrl\n";
+        echo "DEBUG body envoye: $body\n";
+
         try {
             return $this->call($config, $baseUrl, 'POST', $body);
         } catch(ApiCallException $e) {
