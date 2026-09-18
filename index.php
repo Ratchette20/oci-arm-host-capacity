@@ -37,10 +37,6 @@ $config = new OciConfig(
     (int) getenv('OCI_MEMORY_IN_GBS')
 );
 
-echo "DEBUG longueur tenancyId (PHP): " . strlen($config->tenancyId) . "\n";
-echo "DEBUG debut/fin tenancyId: " . substr($config->tenancyId, 0, 20) . "..." . substr($config->tenancyId, -6) . "\n";
-echo "DEBUG espaces parasites: " . (trim($config->tenancyId) === $config->tenancyId ? 'non' : 'OUI, il y en a') . "\n";
-
 $bootVolumeSizeInGBs = (string) getenv('OCI_BOOT_VOLUME_SIZE_IN_GBS');
 $bootVolumeId = (string) getenv('OCI_BOOT_VOLUME_ID');
 if ($bootVolumeSizeInGBs) {
@@ -68,7 +64,13 @@ if (getenv('OCI_MAX_INSTANCES') !== false) {
     $maxRunningInstancesOfThatShape = (int) getenv('OCI_MAX_INSTANCES');
 }
 
-$instances = $api->getInstances($config);
+try {
+    $instances = $api->getInstances($config);
+    echo "ETAPE OK: getInstances\n";
+} catch (\Throwable $e) {
+    echo "ETAPE EN ECHEC: getInstances -> " . $e->getMessage() . "\n";
+    exit(1);
+}
 
 $existingInstances = $api->checkExistingInstances($config, $instances, $shape, $maxRunningInstancesOfThatShape);
 if ($existingInstances) {
@@ -82,17 +84,25 @@ if (!empty($config->availabilityDomains)) {
     } else {
         $availabilityDomains = [ $config->availabilityDomains ];
     }
+    echo "ETAPE OK: availabilityDomains fournis manuellement: " . json_encode($availabilityDomains) . "\n";
 } else {
-    $availabilityDomains = $api->getAvailabilityDomains($config);
+    try {
+        $availabilityDomains = $api->getAvailabilityDomains($config);
+        echo "ETAPE OK: getAvailabilityDomains -> " . json_encode($availabilityDomains) . "\n";
+    } catch (\Throwable $e) {
+        echo "ETAPE EN ECHEC: getAvailabilityDomains -> " . $e->getMessage() . "\n";
+        exit(1);
+    }
 }
 
 foreach ($availabilityDomains as $availabilityDomainEntity) {
     $availabilityDomain = is_array($availabilityDomainEntity) ? $availabilityDomainEntity['name'] : $availabilityDomainEntity;
     try {
         $instanceDetails = $api->createInstance($config, $shape, getenv('OCI_SSH_PUBLIC_KEY'), $availabilityDomain);
+        echo "ETAPE OK: createInstance\n";
     } catch(ApiCallException $e) {
         $message = $e->getMessage();
-        echo "$message\n";
+        echo "ETAPE EN ECHEC: createInstance -> $message\n";
 //            if ($notifier->isSupported()) {
 //                $notifier->notify($message);
 //            }
@@ -112,14 +122,13 @@ foreach ($availabilityDomains as $availabilityDomainEntity) {
     }
 
     // success
-// success
-$message = json_encode($instanceDetails, JSON_PRETTY_PRINT);
-echo "$message\n";
-foreach ($notifiers as $notifier) {
-    if ($notifier->isSupported()) {
-        $notifier->notify($message);
+    $message = json_encode($instanceDetails, JSON_PRETTY_PRINT);
+    echo "$message\n";
+    foreach ($notifiers as $notifier) {
+        if ($notifier->isSupported()) {
+            $notifier->notify($message);
+        }
     }
-}
 
     return;
 }
