@@ -37,6 +37,10 @@ $config = new OciConfig(
     (int) getenv('OCI_MEMORY_IN_GBS')
 );
 
+echo "DEBUG longueur tenancyId (PHP): " . strlen($config->tenancyId) . "\n";
+echo "DEBUG debut/fin tenancyId: " . substr($config->tenancyId, 0, 20) . "..." . substr($config->tenancyId, -6) . "\n";
+echo "DEBUG espaces parasites: " . (trim($config->tenancyId) === $config->tenancyId ? 'non' : 'OUI, il y en a') . "\n";
+
 $bootVolumeSizeInGBs = (string) getenv('OCI_BOOT_VOLUME_SIZE_IN_GBS');
 $bootVolumeId = (string) getenv('OCI_BOOT_VOLUME_ID');
 if ($bootVolumeSizeInGBs) {
